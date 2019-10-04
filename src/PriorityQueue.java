@@ -18,24 +18,29 @@ public class PriorityQueue
     }
 
     public void enqueue(BoardElement element, BoardElement goalElement)
-    {
-        int currCost = element.getCurrCostSoFar();
+    {   //------------------------------------------------------
+        // enqueue
+        //
+        // PURPOSE: enqueues based on priority. First priority is cost, second priority is distance
+        //-----------------------------------------------------
+
+        int currCost = element.getCurrCostSoFar();  // current cost so far
         Node currNode = head;
         Node prev = null;
         boolean found = false;
         Node inserting;
 
 
-        if(head != null)
+        if(head != null)    // if queue is not empty
         {
 
-            while (currNode != null && !found)
+            while (currNode != null && !found)  // while we dont find a suitable position to insert
             {
 
                 int currNodeCost = currNode.data.getCurrCostSoFar();
                 boolean compareCost = currCost > currNodeCost;
 
-                if (!compareCost) {
+                if (!compareCost) { // if we have found a position to insert
 
                     if(currCost != currNodeCost)
                     {
@@ -51,30 +56,30 @@ public class PriorityQueue
                         found = true;
 
                     }
-                    else
+                    else    // position insert is not found
                     {
 
                         double currDistance;
                         double currNodeDistance;
 
-                        while ( currCost == currNodeCost)
+                        while ( currCost == currNodeCost)   // cost is the same so insert based on coordinates
                         {
                             currDistance = getDistance(element,goalElement);
                             currNodeDistance = getDistance(currNode.data, goalElement);
 
-                            if(currDistance <= currNodeDistance)
+                            if(currDistance <= currNodeDistance)    // cost is not the same anymore
                             {
                                 break;
                             }
-                            else
+                            else    // cost is still the same
                             {
                                 prev = currNode;
                                 currNode = currNode.next;
 
-                                if(currNode == null) {
+                                if(currNode == null) {  // we have reached the end
                                     break;
                                 }
-                                else
+                                else    // end not reached
                                 {
                                     currNodeCost = currNode.data.getCurrCostSoFar();
                                 }
@@ -83,12 +88,12 @@ public class PriorityQueue
 
                         }
 
-                        if (prev != null)
+                        if (prev != null)   // if we are not inserting to an empty queue
                         {
                             inserting = new Node(element, currNode);
                             prev.next = inserting;
 
-                        } else {
+                        } else {    // inserting in an empty queue
                             inserting = new Node(element, currNode);
                             head = inserting;
                         }
@@ -97,7 +102,7 @@ public class PriorityQueue
                     }
 
                 }
-                else
+                else    // else keep looping
                 {
                     prev = currNode;
                     currNode = currNode.next;
@@ -105,7 +110,7 @@ public class PriorityQueue
 
             }
 
-            if(currNode == null &&  !found)
+            if(currNode == null &&  !found)     // we reached the end. The item inserting has greatest cost
             {
                 prev.next = new Node(element, null);
             }
@@ -126,7 +131,11 @@ public class PriorityQueue
 
 
     private double getDistance(BoardElement first, BoardElement second)
-    {
+    {   //------------------------------------------------------
+        // getDistance
+        //
+        // PURPOSE: gives eucledian distance between two coordinates
+        //-----------------------------------------------------
         double retValue = Integer.MAX_VALUE;
 
         double x1 = first.getX();
@@ -144,7 +153,11 @@ public class PriorityQueue
 
 
     public BoardElement dequeue()
-    {
+    {   //------------------------------------------------------
+        // dequeue
+        //
+        // PURPOSE: dequeues from start
+        //-----------------------------------------------------
 
         BoardElement retValue = null;
 
@@ -159,7 +172,7 @@ public class PriorityQueue
 
 
 
-    private class Node
+    private class Node  // private node class
     {
         private BoardElement data;
         private Node next;

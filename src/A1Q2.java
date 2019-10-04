@@ -131,7 +131,12 @@ public class A1Q2
     }
 
     private static int getCost( BoardElement element)
-    {
+    {   //------------------------------------------------------
+        // getCost
+        //
+        // PURPOSE: gets the cost of the board element depending on the char
+        //-----------------------------------------------------
+
         int retValue = 1;
 
         if(element.getItem() == '.')
@@ -164,36 +169,42 @@ public class A1Q2
         //
         // PURPOSE: runs the game and searches and outputs the overall result
         //-----------------------------------------------------
+
         int columns = board.length;
         int rows = board[0].length;
-        PriorityQueue priorityQueue = new PriorityQueue();
-        BoardElement[][] retBoard = copy(board);
-        List<BoardElement> bombsDiffused = new ArrayList<BoardElement>();
-        BoardElement currGoalState = null;
-        BoardElement currentState = null;
-        List<BoardElement> bombsExploded = new ArrayList<BoardElement>();
-        BoardElement[][] currBoard = copy(board);
-        int currAgentLocationX = agentLocationX;
-        int currAgentLocationY = agentLocationY;
-        int startSearchCost = 0;
-        BoardElement startState;
+        PriorityQueue priorityQueue = new PriorityQueue();  // the pq to store states
+        BoardElement[][] retBoard = copy(board);            // copy of the board to return
+        List<BoardElement> bombsDiffused = new ArrayList<BoardElement>();   // stores the bombs diffused
+        BoardElement currGoalState = null;                      // stores current goal state
+        BoardElement currentState = null;                       // stores current state working on
+        List<BoardElement> bombsExploded = new ArrayList<BoardElement>();   // stores the bombs exploded
+        BoardElement[][] currBoard = copy(board);               // stores the board we are working on
+        int currAgentLocationX = agentLocationX;        // stores current agents location x
+        int currAgentLocationY = agentLocationY;        // stores current agents location y
+        int startSearchCost = 0;     // stores search cost before we start to diffuse a bomb
+        BoardElement startState;    // stores the start state before we start to diffuse a bomb
 
-        fixPrintOutput(retBoard,bombElements,"");
+
+        fixPrintOutput(retBoard,bombElements,"");   // fixes output display
 
         // keep looping for all bombs one by one
         for(int currBombIndex = 0; currBombIndex < bombElements.length; currBombIndex++)
         {
+            // current bomb working on coordinates
             int bombX = bombElements[currBombIndex].getX();
             int bombY = bombElements[currBombIndex].getY();
+
+            // initialize
             currGoalState = currBoard[bombX][bombY];
             currentState = currBoard[currAgentLocationX][currAgentLocationY];
             startState = currBoard[currAgentLocationX][currAgentLocationY];
             currentState.updateCoordinates(null);
             boolean found = false;
 
+            // enqueue start state
             priorityQueue.enqueue(currentState,currGoalState);
 
-            while ( !priorityQueue.isEmpty() && !found )
+            while ( !priorityQueue.isEmpty() && !found )    // till bomb is not found or unreachable
             {
                 currentState = priorityQueue.dequeue();    // enqueue the first one and get the current state.
 
@@ -202,7 +213,7 @@ public class A1Q2
 
                 if (currentState.isEqual(currGoalState))
                 {
-                    found = true;
+                    found = true;   // bomb found
                 }
                 else    //  we havent yet found the goal state. so add all the neighbouring coordinates
                 {
@@ -212,7 +223,7 @@ public class A1Q2
             }
 
 
-            if(found && currentState.getCurrCostSoFar() <= timer(currGoalState))
+            if(found && currentState.getCurrCostSoFar() <= timer(currGoalState))    // bomb was found and reachable
             {
 
                 currBoard = copy(board);    // new fresh board
@@ -221,7 +232,7 @@ public class A1Q2
                 bombsDiffused.add(currGoalState);
                 updateBoardWithValues(retBoard,currentState.getCoordinates(),bombElements);
             }
-            else // goal state unreachable
+            else // goal state unreachable or not found
             {
                 // modify agents location to initial startpoint, copy for new board item, make sure curr agent has the right cost
                 bombsExploded.add(currGoalState);
@@ -232,15 +243,17 @@ public class A1Q2
 
             }
 
-            priorityQueue.clearQueue();
+            priorityQueue.clearQueue(); // lets clear the queue
 
         }
 
+        // fixing the prints
         retBoard[agentLocationX][agentLocationY].setItem('@');  // ensure it prints out the agents start locaion
         fixPrintOutput(retBoard,bombsExploded.toArray(BoardElement[]::new),"Exploded");
         fixPrintOutput(retBoard,bombsDiffused.toArray(BoardElement[]::new),"Diffused");
 
 
+        // print statements
         System.out.println("\n    Number of Bombs disarmed: " + bombsDiffused.size());
         System.out.println("    Number of Bombs exploded: " + bombsExploded.size());
         System.out.println("    Cost of Plan            : " + startSearchCost);
@@ -257,7 +270,11 @@ public class A1Q2
 
 
     private static void fixPrintOutput(BoardElement[][] boardElements, BoardElement[] bombs, String what)
-    {
+    {   //------------------------------------------------------
+        // fixPrintOutput
+        //
+        // PURPOSE: Fixes the print output
+        //-----------------------------------------------------
 
         for(int i = 0; i < bombs.length; i++)
         {
@@ -282,7 +299,11 @@ public class A1Q2
     }
 
     private static void printBombs(BoardElement[] bombs, String message)
-    {
+    {   //------------------------------------------------------
+        // printBombs
+        //
+        // PURPOSE: prints all bombs in a set
+        //-----------------------------------------------------
         System.out.print(message + " { ");
         for(int i = 0; i < bombs.length; i++ )
         {
@@ -294,7 +315,12 @@ public class A1Q2
 
 
     private static void enqueueNeighbouringStates(PriorityQueue priorityQueue, int currAgentLocationX, int currAgentLocationY, BoardElement currentState, BoardElement currGoalState, BoardElement[][] currBoard)
-    {
+    {   //------------------------------------------------------
+        // enqueueNeighbouringStates
+        //
+        // PURPOSE: enqueues all 8 neighbouring states if they are not already in queue
+        //-----------------------------------------------------
+
         BoardElement addBoard = null;
 
         addBoard = currBoard[currAgentLocationX][currAgentLocationY + 1];
@@ -325,7 +351,11 @@ public class A1Q2
 
 
     private static void updateBoardWithValues(BoardElement[][] retBoard, List<Coordinates> coordinates, BoardElement[] bombs)
-    {
+    {   //------------------------------------------------------
+        // updateBoardWithValues
+        //
+        // PURPOSE: Updates the print board of the paths visited
+        //-----------------------------------------------------
         Coordinates coordinate;
         boolean isBomb = false;
 
@@ -339,7 +369,11 @@ public class A1Q2
 
 
     private static int timer(BoardElement goalState)
-    {
+    {   //------------------------------------------------------
+        // timer
+        //
+        // PURPOSE: returns the bombs timer
+        //-----------------------------------------------------
         int retValue = 0;
 
         char ch = goalState.getItem();
@@ -353,6 +387,11 @@ public class A1Q2
 
 
     private static void addCoordinatesToQueue(PriorityQueue priorityQueue, BoardElement addBoard, BoardElement currentState, BoardElement currGoalState){
+        //------------------------------------------------------
+        // addCoordinatesToQueue
+        //
+        // PURPOSE: adds non visited and non walls to queue
+        //-----------------------------------------------------
 
         int addCost = 0;
         numStatesVisited++;
@@ -373,7 +412,12 @@ public class A1Q2
 
 
     private static BoardElement[] sort(List<BoardElement> bombs)
-    {
+    {   //------------------------------------------------------
+        // sort
+        //
+        // PURPOSE: sorts bombs based on timing
+        //-----------------------------------------------------
+
         int numBombs = bombs.size();
         BoardElement[] tempBombs = new BoardElement[numBombs];
         BoardElement smallValue;

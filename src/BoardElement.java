@@ -18,7 +18,6 @@ class BoardElement      // Object that stores board elements
     private char item;  // if its an @ or a wall # etc
     private List<Coordinates> coordinates;
     private boolean visited;
-    private boolean isQueued;
     private int currCostSoFar;
 
 
@@ -32,7 +31,11 @@ class BoardElement      // Object that stores board elements
     }
 
     public void updateCoordinates(List<Coordinates> prevList)
-    {
+    {   //------------------------------------------------------
+        // updateCoordinates
+        //
+        // PURPOSE: updates coordinates in the path
+        //-----------------------------------------------------
         if(prevList != null)
         {
             coordinates = new ArrayList<Coordinates>(prevList);
@@ -90,7 +93,12 @@ class BoardElement      // Object that stores board elements
     }
 
     public void incrementNumVisits()
-    {
+    {   //------------------------------------------------------
+        // incrementNumVisits
+        //
+        // PURPOSE: increments the number of times this state was visited
+        //-----------------------------------------------------
+
         if(item == ' ' || item == '.'|| item == ':'|| item == '!'|| item == '$' || item == '@'|| item == '#')
         {
             item = '1';
@@ -106,7 +114,11 @@ class BoardElement      // Object that stores board elements
     }
 
     public void decrementItem()
-    {
+    {   //------------------------------------------------------
+        // decrementItem
+        //
+        // PURPOSE: decrements the visits
+        //-----------------------------------------------------
         if(item == ' ' || item == '.'|| item == ':'|| item == '!'|| item == '$' || item == '@'|| item == '#')
         {
             item = '1';
@@ -122,7 +134,11 @@ class BoardElement      // Object that stores board elements
     }
 
     public boolean isEqual(BoardElement other)
-    {
+    {   //------------------------------------------------------
+        // isEqual
+        //
+        // PURPOSE: returns true if another board item is equal to this one
+        //-----------------------------------------------------
         boolean retValue = false;
 
         if(x == other.getX() && y == other.getY())
@@ -135,7 +151,7 @@ class BoardElement      // Object that stores board elements
 }
 
 
-class Coordinates
+class Coordinates       // private class that stores coordinates
 {
     private int coordinateX;
     private int coordinateY;
