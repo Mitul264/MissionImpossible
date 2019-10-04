@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /** * A1Q1.java
  *
@@ -13,6 +11,10 @@ import java.util.Scanner;
 
 public class A1Q2
 {
+
+
+    private static int numStatesVisited = 0;
+
     public static void main(String[] args) {
 
         mainHelper();
@@ -35,7 +37,8 @@ public class A1Q2
         BoardElement[][] board;
         List<BoardElement> bombElements = new ArrayList<>();
         BoardElement agent = null;
-
+        int agentX = 0;
+        int agentY = 0;
 
         while (!line.equals(""))
         {
@@ -52,14 +55,23 @@ public class A1Q2
                 {
                     char item = line.charAt(x);
 
-                    BoardElement newElement = new BoardElement(x,y,line.charAt(x));
+                    BoardElement newElement;
 
                     if(item == '@')
                     {
+                        agentX = x;
+                        agentY = y;
+                        newElement = new BoardElement(x,y,' ');
                         agent = newElement;
+                    }
+                    else
+                    {
+                        newElement = new BoardElement(x,y,item);
 
                     }
-                    else if(Character.isLetter(item))
+
+
+                    if(Character.isLetter(item))
                     {
                         bombElements.add(newElement);
                     }
@@ -70,19 +82,19 @@ public class A1Q2
 
             // Do all my computation here... ...
 
-            System.out.println("\n RUNNING, PLEASE WAIT... ...");
+            System.out.println("\nRUNNING, PLEASE WAIT... ...");
 
-            if(agent==null)
+            if(agent == null)
             {
                 System.out.println("NO AGENT EXISTS!");
             }
             else
             {
-                print(runGame(board, bombElements, agent));
-
+                BoardElement[][] boardGame = runGame(board, sort(bombElements), agentX,agentY);
+                print(boardGame);
             }
             // end of all computation
-
+            bombElements.clear();
             System.out.println("\nPlease enter ******ONLY ONE****** (Press Enter alone to Quit):\n");
             line = scanner.nextLine();
         }
@@ -102,7 +114,7 @@ public class A1Q2
         //-----------------------------------------------------
         int columns = board.length;
         int rows = board[0].length;
-        String line = "\n";
+        String line = "\n    ";
 
         for(int y = 0; y < rows; y++)
         {
@@ -112,14 +124,41 @@ public class A1Q2
                 line += board[x][y].getItem();
             }
 
-            System.out.println(line);
+            System.out.println("    " + line);
             line = "";
         }
 
     }
 
+    private static int getCost( BoardElement element)
+    {
+        int retValue = 1;
 
-    private static BoardElement[][] runGame(BoardElement[][] board, List<BoardElement> bombElements, BoardElement agent)
+        if(element.getItem() == '.')
+        {
+            retValue = 2;
+        }
+        else if(element.getItem() == ':')
+        {
+            retValue = 3;
+        }
+        else if(element.getItem() == '!')
+        {
+            retValue = 4;
+        }else if(element.getItem() == '$')
+        {
+            retValue = 5;
+        }
+        else if(element.getItem() == '#')
+        {
+            retValue = -1;
+        }
+
+        return retValue;
+    }
+
+
+    private static BoardElement[][] runGame(BoardElement[][] board, BoardElement[] bombElements, int agentLocationX, int agentLocationY)
     {   //------------------------------------------------------
         // runGame
         //
@@ -127,15 +166,211 @@ public class A1Q2
         //-----------------------------------------------------
         int columns = board.length;
         int rows = board[0].length;
+        PriorityQueue priorityQueue = new PriorityQueue();
         BoardElement[][] retBoard = copy(board);
-        boolean[][] currBoardVisits = new boolean[columns][rows];     // keeps track if a board item was visited or not.
+        List<BoardElement> bombsDiffused = new ArrayList<BoardElement>();
+        BoardElement currGoalState = null;
+        BoardElement currentState = null;
+        List<BoardElement> bombsExploded = new ArrayList<BoardElement>();
+        BoardElement[][] currBoard = copy(board);
+        int currAgentLocationX = agentLocationX;
+        int currAgentLocationY = agentLocationY;
+        int startSearchCost = 0;
+        BoardElement startState;
 
-        //*********CODE HERE************************
+        fixPrintOutput(retBoard,bombElements,"");
+
+        // keep looping for all bombs one by one
+        for(int currBombIndex = 0; currBombIndex < bombElements.length; currBombIndex++)
+        {
+            int bombX = bombElements[currBombIndex].getX();
+            int bombY = bombElements[currBombIndex].getY();
+            currGoalState = currBoard[bombX][bombY];
+            currentState = currBoard[currAgentLocationX][currAgentLocationY];
+            startState = currBoard[currAgentLocationX][currAgentLocationY];
+            currentState.updateCoordinates(null);
+            boolean found = false;
+
+            priorityQueue.enqueue(currentState,currGoalState);
+
+            while ( !priorityQueue.isEmpty() && !found )
+            {
+                currentState = priorityQueue.dequeue();    // enqueue the first one and get the current state.
+
+                currAgentLocationX = currentState.getX();
+                currAgentLocationY = currentState.getY();
+
+                if (currentState.isEqual(currGoalState))
+                {
+                    found = true;
+                }
+                else    //  we havent yet found the goal state. so add all the neighbouring coordinates
+                {
+                    enqueueNeighbouringStates(priorityQueue,currAgentLocationX,currAgentLocationY,currentState,currGoalState,currBoard);
+                }
+
+            }
 
 
+            if(found && currentState.getCurrCostSoFar() <= timer(currGoalState))
+            {
+
+                currBoard = copy(board);    // new fresh board
+                startSearchCost = currentState.getCurrCostSoFar();
+                currBoard[currAgentLocationX][currAgentLocationY].updateCost(startSearchCost);
+                bombsDiffused.add(currGoalState);
+                updateBoardWithValues(retBoard,currentState.getCoordinates(),bombElements);
+            }
+            else // goal state unreachable
+            {
+                // modify agents location to initial startpoint, copy for new board item, make sure curr agent has the right cost
+                bombsExploded.add(currGoalState);
+                currAgentLocationX = startState.getX();
+                currAgentLocationY = startState.getY();
+                currBoard = copy(board);    // new fresh board
+                currBoard[currAgentLocationX][currAgentLocationY].updateCost(startSearchCost);
+
+            }
+
+            priorityQueue.clearQueue();
+
+        }
+
+        retBoard[agentLocationX][agentLocationY].setItem('@');  // ensure it prints out the agents start locaion
+        fixPrintOutput(retBoard,bombsExploded.toArray(BoardElement[]::new),"Exploded");
+        fixPrintOutput(retBoard,bombsDiffused.toArray(BoardElement[]::new),"Diffused");
+
+
+        System.out.println("\n    Number of Bombs disarmed: " + bombsDiffused.size());
+        System.out.println("    Number of Bombs exploded: " + bombsExploded.size());
+        System.out.println("    Cost of Plan            : " + startSearchCost);
+        System.out.println("    States visited          : " + numStatesVisited);
+
+        printBombs(bombsDiffused.toArray(BoardElement[]::new),"\n    BOMBS DISARMED:");
+        printBombs(bombsExploded.toArray(BoardElement[]::new),"    BOMBS EXPLODED:");
+
+
+        // make  ALL print statements on the bombs visited, numstates visited etc
 
         return retBoard;
     }
+
+
+    private static void fixPrintOutput(BoardElement[][] boardElements, BoardElement[] bombs, String what)
+    {
+
+        for(int i = 0; i < bombs.length; i++)
+        {
+            if(what.equals(""))
+            {
+                boardElements[bombs[i].getX()][bombs[i].getY()].setItem(' ');
+
+            }else if (what.equals("Exploded"))
+            {
+                char item = bombs[i].getItem();
+                boardElements[bombs[i].getX()][bombs[i].getY()].setItem(item);
+
+            }
+            else
+            {
+                boardElements[bombs[i].getX()][bombs[i].getY()].decrementItem();
+
+            }
+
+        }
+
+    }
+
+    private static void printBombs(BoardElement[] bombs, String message)
+    {
+        System.out.print(message + " { ");
+        for(int i = 0; i < bombs.length; i++ )
+        {
+            System.out.print(bombs[i].getItem() + "  ");
+        }
+        System.out.println("}");
+
+    }
+
+
+    private static void enqueueNeighbouringStates(PriorityQueue priorityQueue, int currAgentLocationX, int currAgentLocationY, BoardElement currentState, BoardElement currGoalState, BoardElement[][] currBoard)
+    {
+        BoardElement addBoard = null;
+
+        addBoard = currBoard[currAgentLocationX][currAgentLocationY + 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX][currAgentLocationY - 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX + 1][currAgentLocationY];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX - 1][currAgentLocationY];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX - 1][currAgentLocationY - 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX + 1][currAgentLocationY + 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX + 1][currAgentLocationY - 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+
+        addBoard = currBoard[currAgentLocationX - 1][currAgentLocationY + 1];
+        addCoordinatesToQueue(priorityQueue,addBoard,currentState,currGoalState);
+    }
+
+
+
+    private static void updateBoardWithValues(BoardElement[][] retBoard, List<Coordinates> coordinates, BoardElement[] bombs)
+    {
+        Coordinates coordinate;
+        boolean isBomb = false;
+
+        for(int i = 0; i < coordinates.size(); i++)
+        {
+            coordinate = coordinates.get(i);
+            retBoard[coordinate.getCoordinateX()][coordinate.getCoordinateY()].incrementNumVisits();
+
+        }
+    }
+
+
+    private static int timer(BoardElement goalState)
+    {
+        int retValue = 0;
+
+        char ch = goalState.getItem();
+        retValue = ch - 64;
+        retValue *= 10;
+
+        return retValue;
+    }
+
+
+
+
+    private static void addCoordinatesToQueue(PriorityQueue priorityQueue, BoardElement addBoard, BoardElement currentState, BoardElement currGoalState){
+
+        int addCost = 0;
+        numStatesVisited++;
+
+        if(!addBoard.getVisited())
+        {
+            addCost = getCost(addBoard);
+            addBoard.setAsVisited();
+            if(addCost != -1)   // if its not a wall
+            {
+                addBoard.updateCost( addCost + currentState.getCurrCostSoFar() );
+                addBoard.updateCoordinates( currentState.getCoordinates() );
+                priorityQueue.enqueue( addBoard, currGoalState );
+            }
+        }
+
+    }
+
 
     private static BoardElement[] sort(List<BoardElement> bombs)
     {
@@ -157,7 +392,6 @@ public class A1Q2
 
             tempBombs[j+1]=smallValue;
         }
-
         return tempBombs;
     }
 
@@ -182,9 +416,4 @@ public class A1Q2
         }
         return retBoard;
     }
-
-
-
-
-
 }
