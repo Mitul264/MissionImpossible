@@ -127,7 +127,7 @@ class BoardElement      // Object that stores board elements
         {
             item = '9';
         }
-        else
+        else if(item != 49)
         {
             item--;
         }
@@ -149,7 +149,6 @@ class BoardElement      // Object that stores board elements
         return retValue;
     }
 }
-
 
 class Coordinates       // private class that stores coordinates
 {

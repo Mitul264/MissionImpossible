@@ -83,9 +83,7 @@ public class PriorityQueue
                                 {
                                     currNodeCost = currNode.data.getCurrCostSoFar();
                                 }
-
                             }
-
                         }
 
                         if (prev != null)   // if we are not inserting to an empty queue
@@ -169,7 +167,6 @@ public class PriorityQueue
 
         return retValue;
     }
-
 
 
     private class Node  // private node class
